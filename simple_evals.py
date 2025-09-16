@@ -83,6 +83,9 @@ def main():
             reasoning_model=True,
             reasoning_effort="low",
         ),
+        "gpt-5": ResponsesSampler(
+            model="gpt-5-2025-08-07",
+        ),
         # Default == Medium
         "o4-mini": ResponsesSampler(
             model="o4-mini-2025-04-16",
