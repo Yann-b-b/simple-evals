@@ -21,6 +21,7 @@ class ResponsesSampler(SamplerBase):
         max_tokens: int = 1024,
         reasoning_model: bool = False,
         reasoning_effort: str | None = None,
+        enable_web_search: bool = False,  # toggles built-in web search tool
     ):
         self.api_key_name = "OPENAI_API_KEY"
         assert os.environ.get("OPENAI_API_KEY"), "Please set OPENAI_API_KEY"
@@ -32,7 +33,7 @@ class ResponsesSampler(SamplerBase):
         self.image_format = "url"
         self.reasoning_model = reasoning_model
         self.reasoning_effort = reasoning_effort
-
+        self.enable_web_search = enable_web_search  # store toggle for use at call time
     def _handle_image(
         self,
         image: str,
@@ -60,6 +61,11 @@ class ResponsesSampler(SamplerBase):
         trial = 0
         while True:
             try:
+                # Enable built-in web search tool if requested
+                tools = [{"type": "web_search"}] if self.enable_web_search else None  # build tool list when enabled
+                extra_kwargs: dict[str, Any] = {}  # optional parameters container
+                if tools:  # only attach tools when enabled
+                    extra_kwargs["tools"] = tools  # pass tools to the Responses API
                 if self.reasoning_model:
                     reasoning = (
                         {"effort": self.reasoning_effort}
@@ -70,6 +76,7 @@ class ResponsesSampler(SamplerBase):
                         model=self.model,
                         input=message_list,
                         reasoning=reasoning,
+                        **extra_kwargs,  # include tools if set
                     )
                 else:
                     response = self.client.responses.create(
@@ -77,6 +84,7 @@ class ResponsesSampler(SamplerBase):
                         input=message_list,
                         temperature=self.temperature,
                         max_output_tokens=self.max_tokens,
+                        **extra_kwargs,  # include tools if set
                     )
                 return SamplerResponse(
                     response_text=response.output_text,

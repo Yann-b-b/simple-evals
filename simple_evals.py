@@ -87,6 +87,8 @@ def main():
             model="gpt-5-2025-08-07",
             reasoning_model=True,
             reasoning_effort="low",
+            enable_web_search=True,
+            system_message="Make sure to search the web.",
         ),
         # Default == Medium
         "o4-mini": ResponsesSampler(
