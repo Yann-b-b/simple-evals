@@ -24,6 +24,7 @@ class ChatCompletionSampler(SamplerBase):
         system_message: str | None = None,
         temperature: float = 0.5,
         max_tokens: int = 1024,
+        max_retries: int = 5,  # cap retries so runs can finish and results can be written
     ):
         self.api_key_name = "OPENAI_API_KEY"
         self.client = OpenAI()
@@ -33,6 +34,7 @@ class ChatCompletionSampler(SamplerBase):
         self.temperature = temperature
         self.max_tokens = max_tokens
         self.image_format = "url"
+        self.max_retries = max_retries  # store retry cap
 
     def _handle_image(
         self,
@@ -61,7 +63,8 @@ class ChatCompletionSampler(SamplerBase):
                 self._pack_message("system", self.system_message)
             ] + message_list
         trial = 0
-        while True:
+        # bounded retries: allow run to proceed with placeholder if exhausted
+        while trial <= self.max_retries:
             try:
                 response = self.client.chat.completions.create(
                     model=self.model,
@@ -94,3 +97,9 @@ class ChatCompletionSampler(SamplerBase):
                 time.sleep(exception_backoff)
                 trial += 1
             # unknown error shall throw exception
+        # retries exhausted: return placeholder so eval can continue and write results
+        return SamplerResponse(
+            response_text="",
+            response_metadata={"usage": None},
+            actual_queried_message_list=message_list,
+        )

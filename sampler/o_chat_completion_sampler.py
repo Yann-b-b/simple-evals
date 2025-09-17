@@ -17,6 +17,7 @@ class OChatCompletionSampler(SamplerBase):
         *,
         reasoning_effort: str | None = None,
         model: str = "o1-mini",
+        max_retries: int = 5,  # cap retries so runs can finish and results can be written
     ):
         self.api_key_name = "OPENAI_API_KEY"
         self.client = OpenAI()
@@ -24,6 +25,7 @@ class OChatCompletionSampler(SamplerBase):
         self.model = model
         self.image_format = "url"
         self.reasoning_effort = reasoning_effort
+        self.max_retries = max_retries  # store retry cap
 
     def _handle_image(
         self,
@@ -48,7 +50,8 @@ class OChatCompletionSampler(SamplerBase):
 
     def __call__(self, message_list: MessageList) -> SamplerResponse:
         trial = 0
-        while True:
+        # bounded retries: allow run to proceed with placeholder if exhausted
+        while trial <= self.max_retries:
             try:
                 response = self.client.chat.completions.create(
                     model=self.model,
@@ -78,3 +81,9 @@ class OChatCompletionSampler(SamplerBase):
                 time.sleep(exception_backoff)
                 trial += 1
             # unknown error shall throw exception
+        # retries exhausted: return placeholder so eval can continue and write results
+        return SamplerResponse(
+            response_text="",
+            response_metadata={"usage": None},
+            actual_queried_message_list=message_list,
+        )

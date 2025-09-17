@@ -22,6 +22,7 @@ class ResponsesSampler(SamplerBase):
         reasoning_model: bool = False,
         reasoning_effort: str | None = None,
         enable_web_search: bool = False,  # toggles built-in web search tool
+        max_retries: int = 5,  # cap retries so runs can finish and results can be written
     ):
         self.api_key_name = "OPENAI_API_KEY"
         assert os.environ.get("OPENAI_API_KEY"), "Please set OPENAI_API_KEY"
@@ -34,6 +35,7 @@ class ResponsesSampler(SamplerBase):
         self.reasoning_model = reasoning_model
         self.reasoning_effort = reasoning_effort
         self.enable_web_search = enable_web_search  # store toggle for use at call time
+        self.max_retries = max_retries  # store retry cap
     def _handle_image(
         self,
         image: str,
@@ -59,7 +61,8 @@ class ResponsesSampler(SamplerBase):
                 self._pack_message("developer", self.system_message)
             ] + message_list
         trial = 0
-        while True:
+        # bounded retries: allow run to proceed with placeholder if exhausted
+        while trial <= self.max_retries:
             try:
                 # Enable built-in web search tool if requested
                 tools = [{"type": "web_search"}] if self.enable_web_search else None  # build tool list when enabled
@@ -107,3 +110,9 @@ class ResponsesSampler(SamplerBase):
                 time.sleep(exception_backoff)
                 trial += 1
             # unknown error shall throw exception
+        # retries exhausted: return placeholder so eval can continue and write results
+        return SamplerResponse(
+            response_text="",
+            response_metadata={"usage": None},
+            actual_queried_message_list=message_list,
+        )

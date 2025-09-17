@@ -1,3 +1,23 @@
+## Local modifications (short)
+
+- Enabled optional web search via `enable_web_search` in `ResponsesSampler`.
+- Added bounded retries (`max_retries`) to samplers to avoid hanging and allow partial results.
+- Fixed BrowseComp grader label parsing and show decrypted correct answers in reports.
+- Added post-processing tool to recompute accuracy excluding empty responses and generate HTML: `simple_evals/postprocess_browsecomp.py`.
+
+Examples:
+
+```bash
+# Recompute on latest run and write a postprocessed HTML
+python -m simple_evals.postprocess_browsecomp --latest
+
+# Recompute on a specific results file
+python -m simple_evals.postprocess_browsecomp --file /tmp/browsecomp_*_allresults.json
+
+# Open the generated HTML (macOS)
+open "$(python -m simple_evals.postprocess_browsecomp --latest | jq -r '.postprocessed_html' | tail -1)"
+```
+
 # ⚠️ Deprecation Notice
 
 **July 2025**: `simple-evals` will no longer be updated for new models or benchmark results. The repo will continue to host reference implementations for **HealthBench**, **BrowseComp**, and **SimpleQA**.
