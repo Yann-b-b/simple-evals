@@ -1,3 +1,6 @@
+> RESULTS_GPT-5_BROWSECOMP_EVAL.html stores the final run over 15 BrowseComp prompts. View it with:
+> `open /Users/yannbaglinbunod/Desktop/BrowseComp/simple_evals/RESULTS_GPT-5_BROWSECOMP_EVAL.html`
+
 ## Local modifications (short)
 
 - Enabled optional web search via `enable_web_search` in `ResponsesSampler`.
