@@ -83,7 +83,7 @@ def main():
             reasoning_model=True,
             reasoning_effort="low",
         ),
-        "gpt-5": ResponsesSampler(
+        "gpt-5-search": ResponsesSampler(
             model="gpt-5-2025-08-07",
             reasoning_model=True,
             reasoning_effort="low",

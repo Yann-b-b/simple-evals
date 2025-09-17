@@ -90,8 +90,9 @@ class BrowseCompEval(Eval):
         grading_response = sampler_response.response_text
 
         match = re.search(r"correct: (yes|no)", grading_response)
-        return match.group(0) if match else "no"  # Default to "no" if no match
-
+        # Return only the label ('yes' or 'no') for downstream comparison
+        return match.group(1) if match else "no"
+    
     def __call__(self, sampler: SamplerBase) -> EvalResult:
             def fn(row: dict):
                 problem = decrypt(row.get("problem", ""), row.get("canary", ""))
@@ -115,7 +116,7 @@ class BrowseCompEval(Eval):
                     prompt_messages=actual_queried_prompt_messages,
                     next_message=dict(content=response_text, role="assistant"),
                     score=score,
-                    correct_answer=row["answer"],
+                    correct_answer=answer,  # show decrypted plaintext answer in the report
                     extracted_answer=response_text,
                 )
                 convo = actual_queried_prompt_messages + [dict(content=response_text, role="assistant")]
